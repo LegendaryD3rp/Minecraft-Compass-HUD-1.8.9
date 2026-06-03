@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "compassmod",
+    "name": "Compass Mod",
+    "description": "Detailed Compass,HP Bar,Armor Bar,current speed,current time,in-game time,in GUI,all customizable",
+    "version": "1.0.11",
+    "mcversion": "1.8.9",
+    "author":"LegendaryDerp",
+    "url": "",
+    "updateUrl": "",
+    "credits": "LegendaryDerp shows gratitude to Minecraft Forge and Deepseek",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
