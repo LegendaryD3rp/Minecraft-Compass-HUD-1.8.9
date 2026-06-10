@@ -132,6 +132,7 @@ public class CompassConfig {
     public int keysTextColor = 0xFFFFFF;
     public float keysScale = 1.0f;
     public boolean showKeysBackground = false;
+    public float keysOpacity = 1.0f;
 
     // ================================================================
     //  模块10：强制疾跑
@@ -632,6 +633,9 @@ public class CompassConfig {
 
             p = config.get(C, "showKeysBackground", false);
             p.comment = "是否显示按键背景"; showKeysBackground = p.getBoolean();
+
+            p = config.get(C, "keysOpacity", 1.0);
+            p.comment = "按键显示透明度 (0.0~1.0)"; keysOpacity = (float) p.getDouble();
         }
 
         // --- 模块10：强制疾跑 ---
@@ -1134,6 +1138,7 @@ public class CompassConfig {
         saveColor(C, "keysTextColor", keysTextColor);
         config.get(C, "keysScale", 1.0f).set(keysScale);
         config.get(C, "showKeysBackground", false).set(showKeysBackground);
+        config.get(C, "keysOpacity", 1.0).set(keysOpacity);
 
         // --- 模块10 ---
         config.get(C, "enableForceSprint", true).set(enableForceSprint);

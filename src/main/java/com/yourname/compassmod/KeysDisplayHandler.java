@@ -127,7 +127,7 @@ public class KeysDisplayHandler {
 
         // 绘制背景（可选）
         if (CompassMod.config.showKeysBackground) {
-            drawRoundedRect(xPos - 5, yPos - 5, xPos + displayWidth + 5, yPos + displayHeight + 5, 5, 0x80000000);
+            drawRoundedRect(xPos - 5, yPos - 5, xPos + displayWidth + 5, yPos + displayHeight + 5, 5, applyAlpha(0x80000000, CompassMod.config.keysOpacity));
         }
 
         // 严格按照指定格式渲染
@@ -164,10 +164,11 @@ public class KeysDisplayHandler {
     private void renderKey(int x, int y, int width, int height, int keyIndex, String label, FontRenderer fr) {
         boolean isPressed = keyStates[keyIndex];
         float intensity = keyIntensities[keyIndex];
+        float opacity = CompassMod.config.keysOpacity;
 
-        // 计算按键颜色
-        int keyColor = calculateKeyColor(isPressed, intensity);
-        int textColor = CompassMod.config.keysTextColor;
+        // 计算按键颜色（乘以全局透明度）
+        int keyColor = applyAlpha(calculateKeyColor(isPressed, intensity), opacity);
+        int textColor = applyAlpha(CompassMod.config.keysTextColor, opacity);
 
         // 绘制按键背景
         drawRoundedRect(x, y, x + width, y + height, 3, keyColor);
@@ -181,9 +182,17 @@ public class KeysDisplayHandler {
 
         // 绘制按下效果
         if (isPressed || intensity > 0) {
-            int glowColor = (int) (0x40 * intensity) << 24 | (CompassMod.config.keysActiveColor & 0xFFFFFF);
+            int glowAlpha = (int) (0x40 * intensity * opacity);
+            int glowColor = glowAlpha << 24 | (CompassMod.config.keysActiveColor & 0xFFFFFF);
             drawRoundedRect(x - 2, y - 2, x + width + 2, y + height + 2, 5, glowColor);
         }
+    }
+
+    /** 将颜色 ARGB 的 alpha 通道乘以 opacity (0.0~1.0) */
+    private int applyAlpha(int color, float opacity) {
+        if (opacity >= 0.999f) return color;
+        int a = (int)(((color >> 24) & 0xFF) * opacity);
+        return (a << 24) | (color & 0x00FFFFFF);
     }
 
     private int calculateKeyColor(boolean isPressed, float intensity) {
