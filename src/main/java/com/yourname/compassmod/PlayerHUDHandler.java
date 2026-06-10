@@ -379,7 +379,6 @@ public class PlayerHUDHandler {
 
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
-        GlStateManager.disableAlpha();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.color(red, green, blue, alpha);
 
@@ -392,7 +391,6 @@ public class PlayerHUDHandler {
         worldRenderer.pos((double)left, (double)top, 0.0D).endVertex();
         tessellator.draw();
 
-        GlStateManager.enableAlpha();
         GlStateManager.disableBlend();
         GlStateManager.enableTexture2D();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
