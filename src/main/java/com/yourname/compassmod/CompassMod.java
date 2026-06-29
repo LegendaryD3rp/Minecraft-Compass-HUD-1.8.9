@@ -31,9 +31,9 @@ public class CompassMod {
         MinecraftForge.EVENT_BUS.register(new CPSHUDHandler());
         MinecraftForge.EVENT_BUS.register(new DistanceHUDHandler());
         MinecraftForge.EVENT_BUS.register(new CoordinatesHUDHandler()); // 新增坐标显示处理器
+        // EnhancedPingHUDHandler 构造函数内已创建 RealPingCalculator / TrafficBasedPingCalculator
+        // 并自带 pipeline 注入，但仍需注册到 EVENT_BUS 以接收网络事件和渲染事件
         MinecraftForge.EVENT_BUS.register(new EnhancedPingHUDHandler());
-        MinecraftForge.EVENT_BUS.register(new RealPingCalculator());
-        MinecraftForge.EVENT_BUS.register(new TrafficBasedPingCalculator());
         KeysDisplayHandler.register();
 
         ForceSprintHandler forceSprintHandler = new ForceSprintHandler();
@@ -46,9 +46,7 @@ public class CompassMod {
         MinecraftForge.EVENT_BUS.register(forceSprintHandler);
         MinecraftForge.EVENT_BUS.register(sprintStatusHandler);
 
-        // 注册配置变更监听器
-        MinecraftForge.EVENT_BUS.register(new ConfigChangeHandler(forceSprintHandler));
-        // 注册配置变更监听器 - 使用正确的两个参数
+        // 注册配置变更监听器（仅一次）
         MinecraftForge.EVENT_BUS.register(new ConfigChangeHandler(forceSprintHandler));
 
         MinecraftForge.EVENT_BUS.register(new PotionStatusHUDHandler());

@@ -1,15 +1,26 @@
 package com.yourname.compassmod;
 
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+
+import java.lang.reflect.Field;
 
 public class EnhancedPingHUDHandler {
     private static final long PING_CACHE_DURATION = 1000L;
     private static final int MAX_PING_VALUE = 10000;
+
+    private static final String PIPELINE_NAME = "ping_interceptor";
 
     private final Minecraft mc = Minecraft.getMinecraft();
     private final RealPingCalculator realPingCalc;
@@ -17,18 +28,81 @@ public class EnhancedPingHUDHandler {
 
     private long lastPingUpdate = 0;
     private PingData cachedPingData;
+    private boolean pipelineInjected = false;
 
-    // 调试标志
-    private boolean debugMode = true;
+    // 调试标志（默认关闭，如需调试可在代码中改为 true）
+    private boolean debugMode = false;
 
     public EnhancedPingHUDHandler() {
         this.realPingCalc = new RealPingCalculator();
         this.trafficPingCalc = new TrafficBasedPingCalculator();
+    }
 
-        // 注册事件监听
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(realPingCalc);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(trafficPingCalc);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
+    /**
+     * 连接服务器时注入 Netty Pipeline，拦截收发包。
+     */
+    @SubscribeEvent
+    public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        pipelineInjected = false;
+        injectPipeline(event.manager);
+    }
+
+    /**
+     * 断开连接时清理状态，防止断线重连后重复注入。
+     */
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        pipelineInjected = false;
+        cachedPingData = null;
+        lastPingUpdate = 0;
+    }
+
+    /**
+     * 通过反射获取 NetworkManager.channel 字段，注入 ChannelDuplexHandler。
+     * 兼容 MCP 名（channel）和 SRG 名（field_150746_k）。
+     */
+    private void injectPipeline(NetworkManager manager) {
+        if (manager == null || pipelineInjected) return;
+        try {
+            Field channelField = null;
+            try {
+                channelField = NetworkManager.class.getDeclaredField("channel");
+            } catch (NoSuchFieldException e) {
+                channelField = NetworkManager.class.getDeclaredField("field_150746_k");
+            }
+            channelField.setAccessible(true);
+            Channel channel = (Channel) channelField.get(manager);
+            if (channel == null) return;
+
+            // 避免重复注入
+            if (channel.pipeline().get(PIPELINE_NAME) != null) {
+                pipelineInjected = true;
+                return;
+            }
+
+            channel.pipeline().addBefore("packet_handler", PIPELINE_NAME, new ChannelDuplexHandler() {
+                @Override
+                public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+                    if (msg instanceof Packet) {
+                        onPacketSent((Packet<?>) msg);
+                    }
+                    super.write(ctx, msg, promise);
+                }
+
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                    if (msg instanceof Packet) {
+                        onPacketReceived((Packet<?>) msg);
+                    }
+                    super.channelRead(ctx, msg);
+                }
+            });
+
+            pipelineInjected = true;
+            System.out.println("[CompassMod] Ping interceptor injected into pipeline");
+        } catch (Exception e) {
+            System.err.println("[CompassMod] Failed to inject ping interceptor: " + e.getMessage());
+        }
     }
 
     @SubscribeEvent
