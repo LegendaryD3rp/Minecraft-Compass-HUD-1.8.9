@@ -207,6 +207,21 @@ public class CompassConfig {
     public boolean drawVisibleFacesOnly = false;
 
     // ================================================================
+    //  模块14b：RGB 动态流光 & 隐身隐藏
+    // ================================================================
+    public boolean enableRGBMode = false;
+    public int rgbSpeed = 80;                           // 色相循环速度（ms/周期）
+    public boolean rgbApplyBlockOutline = true;
+    public boolean rgbApplyEntityHitbox = true;
+
+    public boolean hideHitboxForInvisible = false;      // 隐身实体不画碰撞箱
+
+    // 快捷键按键码（0 = 未绑定）
+    public int keyBindToggleBlockOutline = 0;
+    public int keyBindToggleEntityHitbox = 0;
+    public int keyBindToggleRGB = 0;
+
+    // ================================================================
     //  模块15：物品信息 HUD
     // ================================================================
     public boolean enableItemInfoHUD = true;
@@ -787,6 +802,24 @@ public class CompassConfig {
             p.comment = "实体描边仅绘制可见面"; drawVisibleFacesOnlyEntities = p.getBoolean();
         }
 
+        // --- 模块14b：RGB 动态流光 & 隐身隐藏 ---
+        {
+            Property p = config.get(C, "enableRGBMode", false);
+            p.comment = "启用 RGB 动态流光（覆盖静态颜色）"; enableRGBMode = p.getBoolean();
+
+            p = config.get(C, "rgbSpeed", 80);
+            p.comment = "RGB 色相循环速度（毫秒/周期，越小越快）"; rgbSpeed = p.getInt();
+
+            p = config.get(C, "rgbApplyBlockOutline", true);
+            p.comment = "RGB 应用于方块描边"; rgbApplyBlockOutline = p.getBoolean();
+
+            p = config.get(C, "rgbApplyEntityHitbox", true);
+            p.comment = "RGB 应用于实体碰撞箱"; rgbApplyEntityHitbox = p.getBoolean();
+
+            p = config.get(C, "hideHitboxForInvisible", false);
+            p.comment = "隐身生物/玩家不显示碰撞箱（默认关，可开）"; hideHitboxForInvisible = p.getBoolean();
+        }
+
         // --- 模块15：物品信息 HUD ---
         {
             Property p = config.get(C, "enableItemInfoHUD", true);
@@ -1034,6 +1067,18 @@ public class CompassConfig {
             p = config.get(C, "targetHPFaceSize", 14);
             p.comment = "面部头像尺寸(像素)"; targetHPFaceSize = p.getInt();
         }
+
+        // --- 快捷键 ---
+        {
+            Property p = config.get(C, "keyBindToggleBlockOutline", 0);
+            p.comment = "方块描边开关快捷键（按键码，0=未绑定）"; keyBindToggleBlockOutline = p.getInt();
+
+            p = config.get(C, "keyBindToggleEntityHitbox", 0);
+            p.comment = "实体碰撞箱开关快捷键"; keyBindToggleEntityHitbox = p.getInt();
+
+            p = config.get(C, "keyBindToggleRGB", 0);
+            p.comment = "RGB流光开关快捷键"; keyBindToggleRGB = p.getInt();
+        }
     }
 
     // ================================================================
@@ -1198,6 +1243,13 @@ public class CompassConfig {
         config.get(C, "entityOutlineWidth", 2.0f).set(entityOutlineWidth);
         config.get(C, "drawVisibleFacesOnlyEntities", false).set(drawVisibleFacesOnlyEntities);
 
+        // --- 模块14b ---
+        config.get(C, "enableRGBMode", false).set(enableRGBMode);
+        config.get(C, "rgbSpeed", 80).set(rgbSpeed);
+        config.get(C, "rgbApplyBlockOutline", true).set(rgbApplyBlockOutline);
+        config.get(C, "rgbApplyEntityHitbox", true).set(rgbApplyEntityHitbox);
+        config.get(C, "hideHitboxForInvisible", false).set(hideHitboxForInvisible);
+
         // --- 模块15 ---
         config.get(C, "enableItemInfoHUD", true).set(enableItemInfoHUD);
         config.get(C, "itemHudX", 5).set(itemHudX);
@@ -1287,6 +1339,11 @@ public class CompassConfig {
         config.get(C, "targetHPShowArmorLabels", true).set(targetHPShowArmorLabels);
         config.get(C, "targetHPShowFace", true).set(targetHPShowFace);
         config.get(C, "targetHPFaceSize", 14).set(targetHPFaceSize);
+
+        // --- 快捷键 ---
+        config.get(C, "keyBindToggleBlockOutline", 0).set(keyBindToggleBlockOutline);
+        config.get(C, "keyBindToggleEntityHitbox", 0).set(keyBindToggleEntityHitbox);
+        config.get(C, "keyBindToggleRGB", 0).set(keyBindToggleRGB);
 
         // 持久化到磁盘
         config.save();
